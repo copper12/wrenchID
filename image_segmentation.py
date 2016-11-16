@@ -18,8 +18,8 @@ def image_segmentation(img1):
                               cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(18,18))
-    remove = cv2.morphologyEx(final, cv2.MORPH_OPEN, kernel)
-    remove = cv2.morphologyEx(remove, cv2.MORPH_CLOSE, kernel)
+    #remove = cv2.morphologyEx(final, cv2.MORPH_OPEN, kernel)
+    #remove = cv2.morphologyEx(remove, cv2.MORPH_CLOSE, kernel)
 #    remove = 
-    return remove
+    return final
     

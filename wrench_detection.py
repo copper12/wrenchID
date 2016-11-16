@@ -67,7 +67,7 @@ sbplt.imshow(im)
 
 # Doesn't get any circles, due to poor image processing
 for radius in radius_array:
-     cicles = cv2.HoughCircles(img_seg_hou, cv2.cv.CV_HOUGH_GRADIENT, 1, 20, param1=50, param2=30, minRadius=0, maxRadius=0)
+     circles = cv2.HoughCircles(img_seg_hou, cv2.cv.CV_HOUGH_GRADIENT, 1, 20, param1=50, param2=30, minRadius=0, maxRadius=0)
      
 #    Need to plot centers as in matlab code used previously
 #      plot(centers(:,1),centers(:,2),'+','LineWidth',2,'Color',color1(i));
