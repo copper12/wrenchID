@@ -10,7 +10,8 @@ import cv2
 import numpy as np
 
 def image_segmentation(img1):
-    img2 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
+    img2 = np.copy(img1)
+    img2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
     img2 = cv2.medianBlur(img2,3)
     
     ret,final = cv2.threshold(img2, 0, 255, 

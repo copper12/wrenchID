@@ -10,40 +10,48 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
-import imtools as imt
-from image_segmentation_length import *
-from image_segmentation import *
-from back_ground_remove import *
 
-im=cv2.imread('2.jpg');
+from imadjust import imadjust
+from stretchlim import stretchlim
+from back_ground_remove import back_ground_remove
+from image_segmentation import image_segmentation
+from image_segmentation_length import image_segmentation_length
+
+im=cv2.imread('2.jpg',1);
 #im = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
 
 (y,x,clrs) = im.shape
-img_hou = im[0:y/2, 0:x] # Cropping Image (matlab line 16)
+img_hou = np.copy(im[0:y/2, 0:x]) # Cropping Image (matlab line 16)
 
-plt.imshow(img_hou)
+fig1 = plt.figure()
+plt.title('Initial Image')
+plt.imshow(im)
 
 # Alter contrast, brightness
 
-img2_hou = imt.imadjust(img_hou)
-img2 = imt.imadjust(im)
+lims = stretchlim(im)
+img2 = np.copy(imadjust(im,lims))
+lims_hou = stretchlim(img_hou)
+img2_hou = np.copy(imadjust(img2,lims_hou))
 
-fig = plt.figure()
-plt.imshow(img2_hou)
-
+fig2 = plt.figure()
+plt.title('imadjust')
+plt.imshow(img2)
 
 # Remove Background
 
-img_remove_hou = back_ground_remove(img2_hou)
-img_remove = back_ground_remove(img2)
+img_remove_hou = np.copy(back_ground_remove(img2_hou))
+img_remove = np.copy(back_ground_remove(img2))
 
-fig = plt.figure()
+fig3 = plt.figure()
+plt.title('Remove Background')
 plt.imshow(img_remove_hou)
 
 img_seg_hou = image_segmentation(img_remove_hou)
 img_seg = image_segmentation_length(img_remove_hou)
 
-fig = plt.figure()
+fig4 = plt.figure()
+plt.title('Image Segmentation')
 plt.imshow(img_seg_hou)
 
 # img_edge = edge(img_seg_hou,'canny');
@@ -53,9 +61,9 @@ color1 =['r','g','b','c','m','y']
 radius_array =[16,17,18,21,25,28]
 size_act=['19','18','15','14','13','12']
 
-fig2 = plt.figure()
-splt = fig2.add_subplot(111)
-splt.imshow(im)
+fig5 = plt.figure()
+sbplt = fig5.add_subplot(111)
+sbplt.imshow(im)
 
 # Doesn't get any circles, due to poor image processing
 for radius in radius_array:
@@ -97,6 +105,9 @@ for n,contour in enumerate(contours):
     # Need to implement lines 67 to 130, find area, length, centriod
     # of rectangles, plot on original graph
     
+if(len(lengths[lengths>0])<6):
+    mm= len(lengths[lengths>0])
+else:
     mm = 6 # Not sure why this is the variable name, a lot of code
             # goes into determining some of the parameters in this section
 

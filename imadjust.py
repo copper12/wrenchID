@@ -7,7 +7,8 @@ Jonathan Hodges, November 15, 2016
 import numpy as np
 
 def imadjust(img,lims):
-    sz = np.shape(img)
+    img2 = np.copy(img)
+    sz = np.shape(img2)
     for i in range(0,sz[2]):
-        img[:,:,i] = (img[:,:,i]-lims[i,0])/(lims[i,1]-lims[i,0])*255
-    return img
+        img2[:,:,i] = (img2[:,:,i]-lims[i,0])/(lims[i,1]-lims[i,0])*255
+    return img2
