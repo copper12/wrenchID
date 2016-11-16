@@ -136,45 +136,65 @@ color1_l = np.fliplr([color1]);
 
 
 #################### WRENCH REGION DETECTION
-#s=regionprops(img_seg,{'Centroid','BoundingBox','Area'});
-# Implement Detect Length and Area:
-#
-#(contours, hierarchy) = cv2.findContours(img_seg,1,2)
-#
-#numobjs = len(contours)
-#x = np.zeros(numobjs)
-#y = np.zeros(numobjs)
-#w = np.zeros(numobjs)
-#h = np.zeros(numobjs)
-#areas = np.zeros(numobjs)
-#lengths = np.zeros(numobjs)
-#
-#for n,contour in enumerate(contours):
-#    (x[n],y[n],w[n],h[n]) = cv2.boundingRect(contour)
-#    
-#    areas[n] = w[n]*h[n]
-#    b_w = 1 # Bounding Box; needs implementation
-#    lengths[n] = np.sqrt(w[n]**2 + h[n]**2)
-#    # Need to implement lines 67 to 130, find area, length, centriod
-#    # of rectangles, plot on original graph
-#    
-#if(len(lengths[lengths>0])<6):
-#    mm= len(lengths[lengths>0])
-#else:
-#    mm = 6 # Not sure why this is the variable name, a lot of code
-#            # goes into determining some of the parameters in this section
-#
-#
-#x_length = np.zeros(mm)
-#x_area = np.zeros(mm)
-#y_area = np.zeros(mm)
-#
-#for n in range(mm):
-#    cen = [x[n],y[n]]  # Need actual centroid location
-#    bb = [x[n],y[n],x[n]+w[n],y[n]+h[n]] # Need actual bounding box
-#    x_area[n] = x[n]*w[n] #Incorrect, placeholder
-#    y_area[n] = y[n]*h[n] # Incorrect, placeholder
-#    
+# Find Contours
+contours, hierarchy = cv2.findContours(img_seg,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+
+# Initialize contour region variables
+c_x = np.zeros(len(contours))
+c_y = np.zeros(len(contours))
+c_w = np.zeros(len(contours))
+c_h = np.zeros(len(contours))
+c_area = np.zeros(len(contours))
+c_length = np.zeros(len(contours))
+c_centroidx = np.zeros(len(contours))
+c_centroidy = np.zeros(len(contours))
+
+moments = []
+
+fig8 = plt.figure()
+plt.imshow(im,cmap='Greys_r')
+plt.title('Plot Found Contour Rectangles')
+for n,contour in enumerate(contours):
+    (c_x[n],c_y[n],c_w[n],c_h[n]) = cv2.boundingRect(contour)
+    c_area[n] = cv2.contourArea(contour)
+        
+    minarearect = cv2.minAreaRect(contour)
+    (wdth,lgth) = minarearect[1]
+    c_length[n] = np.max([wdth,lgth])
+    moments = cv2.moments(contour)
+    
+    if(int(moments['m00']) is not 0):
+        c_centroidx[n] = int(moments['m10']/moments['m00'])
+        c_centroidy[n] = int(moments['m01']/moments['m00'])
+
+
+id_len = np.argsort(c_length)
+
+if(len(id_len)>6):
+    #Found more than 6 regions, n_wrench = 6
+    n_wr = 6
+else:
+    n_wr = len(id_len)
+
+# Take the last 6 (or num wrenches) items in the arrays, as 
+# sorting is from smallest to largest
+c_length2 = c_length[id_len[-n_wr::]]
+c_area2 = c_area[id_len[-n_wr::]]
+c_centroidx2 = c_centroidx[id_len[-n_wr::]]
+c_centroidy2 = c_centroidy[id_len[-n_wr::]]
+
+for n in id_len[-6::]:
+    rect_plt = plt.Rectangle((c_x[n],c_y[n]),c_w[n],c_h[n], color='r',fill=False)
+    plt.gca().add_patch(rect_plt)
+    
+    centroid_plt = plt.Circle((c_centroidx[n],c_centroidy[n]), 
+                              2, color=color1[2])
+    plt.gca().add_patch(centroid_plt)
+    
+######################
+#############   VOTING
+    
+    
 #positions = np.zeros((3,mm))
 #positions[0,:] = np.arange(mm)
 #positions[1,:] = x_area[0:mm]
