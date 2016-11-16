@@ -103,11 +103,6 @@ if plt_flag == 1:
 #################### CIRCLE DETECTION
 circles = cv2.HoughCircles(img_seg_hou, cv2.cv.CV_HOUGH_GRADIENT, 1, 20, param1=50, param2=30, minRadius=0, maxRadius=0)
 
-center_x = np.zeros(len(circles[0]))
-center_y = np.zeros(len(circles[0]))
-radius = np.zeros(len(circles[0]))
-
-#for n,circle in enumerate(circles[0,:,:]):
 center_x = circles[0,:,0] 
 center_y = circles[0,:,1]
 radius = circles[0,:,2]
