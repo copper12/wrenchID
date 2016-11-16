@@ -12,47 +12,80 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
 from imadjust import imadjust
-from stretchlim import stretchlim
+from stretchlim import stretchlim, stretchlim2
 from back_ground_remove import back_ground_remove
 from image_segmentation import image_segmentation
 from image_segmentation_length import image_segmentation_length
 
+plt_flag = 2 # 0: Don't plot
+             # 1: Plot using plt
+             # 2: Plot using cv2.imshow
+lim_type = 1 # 1: Same as Matlab (I think)
+             # 2: Same as Matlab on lower end, fixed upper limit to 255
+
 im=cv2.imread('2.jpg',1);
-#im = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
 
 (y,x,clrs) = im.shape
 img_hou = np.copy(im[0:y/2, 0:x]) # Cropping Image (matlab line 16)
 
-fig1 = plt.figure()
-plt.title('Initial Image')
-plt.imshow(im)
+if plt_flag == 1:
+    fig1 = plt.figure()
+    plt.title('Initial Image')
+    plt.imshow(im)
+if plt_flag == 2:
+    cv2.imshow('Initial Image',im)
+    
 
 # Alter contrast, brightness
 
-lims = stretchlim(im)
+if lim_type == 1:
+    lims = stretchlim(im)
+if lim_type == 2:
+    lims = stretchlim2(im)
+
 img2 = np.copy(imadjust(im,lims))
 lims_hou = stretchlim(img_hou)
-img2_hou = np.copy(imadjust(img2,lims_hou))
+img2_hou = np.copy(imadjust(img_hou,lims_hou))
 
-fig2 = plt.figure()
-plt.title('imadjust')
-plt.imshow(img2)
+if plt_flag == 1:
+    fig2 = plt.figure()
+    plt.title('imadjust')
+    plt.imshow(img2)
+if plt_flag == 2:
+    cv2.imshow('imadjust',img2)
 
 # Remove Background
 
 img_remove_hou = np.copy(back_ground_remove(img2_hou))
 img_remove = np.copy(back_ground_remove(img2))
 
-fig3 = plt.figure()
-plt.title('Remove Background')
-plt.imshow(img_remove_hou)
+if plt_flag == 1:
+    fig3 = plt.figure()
+    plt.title('Remove Background')
+    plt.imshow(img_remove_hou)
+if plt_flag == 2:
+    cv2.imshow('Remove Background',img_remove)
 
 img_seg_hou = image_segmentation(img_remove_hou)
-img_seg = image_segmentation_length(img_remove_hou)
+img_seg = image_segmentation_length(img_remove)
 
-fig4 = plt.figure()
-plt.title('Image Segmentation')
-plt.imshow(img_seg_hou)
+if plt_flag == 1:
+    fig4 = plt.figure()
+    plt.title('Image Segmentation')
+    plt.imshow(img_seg_hou)
+if plt_flag == 2:
+    cv2.imshow('Image Segmentation',img_seg)
+
+# Edge detection
+img_edge = cv2.Canny(img_seg_hou,100,200)
+
+if plt_flag == 1:
+    fig5 = plt.figure()
+    plt.title('Edge Detection')
+    plt.imshow(img_edge)
+if plt_flag == 2:
+    cv2.imshow('Edge Detection',img_edge)
+
 
 # img_edge = edge(img_seg_hou,'canny');
 # Nowhere else in the matlab code was this used, commented out
@@ -61,9 +94,10 @@ color1 =['r','g','b','c','m','y']
 radius_array =[16,17,18,21,25,28]
 size_act=['19','18','15','14','13','12']
 
-fig5 = plt.figure()
-sbplt = fig5.add_subplot(111)
-sbplt.imshow(im)
+if plt_flag == 1:
+    fig5 = plt.figure()
+    sbplt = fig5.add_subplot(111)
+    sbplt.imshow(im)
 
 # Doesn't get any circles, due to poor image processing
 for radius in radius_array:
@@ -131,6 +165,8 @@ e=40 # Pixels, not sure what this does.
 
 #Voting goes here, not sure how it works or why.
     
- 
-
+if plt_flag == 1: 
+    plt.show()
+if plt_flag == 2:
+    cv2.waitKey(0)
 
