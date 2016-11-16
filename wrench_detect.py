@@ -13,7 +13,7 @@ from image_segmentation_length import image_segmentation_length
 
 
 #Read image
-im = cv2.imread('2.jpg',1)
+im = cv2.imread('pipewrench.jpeg',1)
 
 lims = stretchlim(im)
 img2 = imadjust(im,lims)

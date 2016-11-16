@@ -17,7 +17,7 @@ from back_ground_remove import back_ground_remove
 from image_segmentation import image_segmentation
 from image_segmentation_length import image_segmentation_length
 
-plt_flag = 2 # 0: Don't plot
+plt_flag = 1 # 0: Don't plot
              # 1: Plot using plt
              # 2: Plot using cv2.imshow
 lim_type = 1 # 1: Same as Matlab (I think)
@@ -50,7 +50,7 @@ img2_hou = np.copy(imadjust(img_hou,lims_hou))
 if plt_flag == 1:
     fig2 = plt.figure()
     plt.title('imadjust')
-    plt.imshow(img2)
+    plt.imshow(img2,cmap='Greys_r')
 if plt_flag == 2:
     cv2.imshow('imadjust',img2)
 
@@ -62,7 +62,7 @@ img_remove = np.copy(back_ground_remove(img2))
 if plt_flag == 1:
     fig3 = plt.figure()
     plt.title('Remove Background')
-    plt.imshow(img_remove_hou)
+    plt.imshow(img_remove_hou,cmap='Greys_r')
 if plt_flag == 2:
     cv2.imshow('Remove Background',img_remove)
 
@@ -72,9 +72,9 @@ img_seg = image_segmentation_length(img_remove)
 if plt_flag == 1:
     fig4 = plt.figure()
     plt.title('Image Segmentation')
-    plt.imshow(img_seg_hou)
+    plt.imshow(img_seg_hou,cmap='Greys_r')
 if plt_flag == 2:
-    cv2.imshow('Image Segmentation',img_seg)
+    cv2.imshow('Image Segmentation',img_seg_hou)
 
 # Edge detection
 img_edge = cv2.Canny(img_seg_hou,100,200)
@@ -82,7 +82,7 @@ img_edge = cv2.Canny(img_seg_hou,100,200)
 if plt_flag == 1:
     fig5 = plt.figure()
     plt.title('Edge Detection')
-    plt.imshow(img_edge)
+    plt.imshow(img_edge,cmap='Greys_r')
 if plt_flag == 2:
     cv2.imshow('Edge Detection',img_edge)
 
@@ -99,74 +99,98 @@ if plt_flag == 1:
     sbplt = fig5.add_subplot(111)
     sbplt.imshow(im)
 
-# Doesn't get any circles, due to poor image processing
-for radius in radius_array:
-     circles = cv2.HoughCircles(img_seg_hou, cv2.cv.CV_HOUGH_GRADIENT, 1, 20, param1=50, param2=30, minRadius=0, maxRadius=0)
+#####################################
+#################### CIRCLE DETECTION
+circles = cv2.HoughCircles(img_seg_hou, cv2.cv.CV_HOUGH_GRADIENT, 1, 20, param1=50, param2=30, minRadius=0, maxRadius=0)
+
+center_x = np.zeros(len(circles[0]))
+center_y = np.zeros(len(circles[0]))
+radius = np.zeros(len(circles[0]))
+
+#for n,circle in enumerate(circles[0,:,:]):
+center_x = circles[0,:,0] 
+center_y = circles[0,:,1]
+radius = circles[0,:,2]
+
+id_r = np.argsort(radius)
+
+if(len(id_r)>6):
+    #Found more than 6 circles, n_wrench = 6
+    n_wr = 6
+else:
+    n_wr = len(id_r)
+    
+center_x2 = center_x[id_r[0:n_wr]]
+center_y2 = center_y[id_r[0:n_wr]]
+radius_2 = radius[id_r[0:n_wr]]
+
+if(plt_flag == 1):
+    fig6 = plt.figure()
+    plt.imshow(img_seg_hou,cmap='Greys_r')
+    for n in range(n_wr):
+        circ_plt = plt.Circle((center_x2[n],center_y2[n]), 
+                              radius[n], color=color1[1], fill=False)
+        cntr_plt = plt.Circle((center_x2[n],center_y2[n]), 
+                             1, color=color1[2])
+        plt.gca().add_patch(circ_plt)
+        plt.gca().add_patch(cntr_plt)
      
-#    Need to plot centers as in matlab code used previously
-#      plot(centers(:,1),centers(:,2),'+','LineWidth',2,'Color',color1(i));
-#  for j=1:size(centers,1)
-#    theta = 0 : 0.01 : 2*pi;
-#    x = radius(i) * cos(theta) + centers(j,1);
-#    y = radius(i) * sin(theta) + centers(j,2);
-#    plot(x, y,color1(i), 'LineWidth', 2);
-#  end     
      
-#     print(x)
      
 color1_l = np.fliplr([color1]);
 
 
+#################### WRENCH REGION DETECTION
 #s=regionprops(img_seg,{'Centroid','BoundingBox','Area'});
 # Implement Detect Length and Area:
-
-(contours, hierarchy) = cv2.findContours(img_seg,1,2)
-
-numobjs = len(contours)
-x = np.zeros(numobjs)
-y = np.zeros(numobjs)
-w = np.zeros(numobjs)
-h = np.zeros(numobjs)
-areas = np.zeros(numobjs)
-lengths = np.zeros(numobjs)
-
-for n,contour in enumerate(contours):
-    (x[n],y[n],w[n],h[n]) = cv2.boundingRect(contour)
-    
-    areas[n] = w[n]*h[n]
-    b_w = 1 # Bounding Box; needs implementation
-    lengths[n] = np.sqrt(w[n]**2 + h[n]**2)
-    # Need to implement lines 67 to 130, find area, length, centriod
-    # of rectangles, plot on original graph
-    
-if(len(lengths[lengths>0])<6):
-    mm= len(lengths[lengths>0])
-else:
-    mm = 6 # Not sure why this is the variable name, a lot of code
-            # goes into determining some of the parameters in this section
-
-
-x_length = np.zeros(mm)
-x_area = np.zeros(mm)
-y_area = np.zeros(mm)
-
-for n in range(mm):
-    cen = [x[n],y[n]]  # Need actual centroid location
-    bb = [x[n],y[n],x[n]+w[n],y[n]+h[n]] # Need actual bounding box
-    x_area[n] = x[n]*w[n] #Incorrect, placeholder
-    y_area[n] = y[n]*h[n] # Incorrect, placeholder
-    
-positions = np.zeros((3,mm))
-positions[0,:] = np.arange(mm)
-positions[1,:] = x_area[0:mm]
-positions[2,:] = x_length[0:mm:]
-
-e=40 # Pixels, not sure what this does.
-
-#Voting goes here, not sure how it works or why.
-    
-if plt_flag == 1: 
-    plt.show()
-if plt_flag == 2:
-    cv2.waitKey(0)
+#
+#(contours, hierarchy) = cv2.findContours(img_seg,1,2)
+#
+#numobjs = len(contours)
+#x = np.zeros(numobjs)
+#y = np.zeros(numobjs)
+#w = np.zeros(numobjs)
+#h = np.zeros(numobjs)
+#areas = np.zeros(numobjs)
+#lengths = np.zeros(numobjs)
+#
+#for n,contour in enumerate(contours):
+#    (x[n],y[n],w[n],h[n]) = cv2.boundingRect(contour)
+#    
+#    areas[n] = w[n]*h[n]
+#    b_w = 1 # Bounding Box; needs implementation
+#    lengths[n] = np.sqrt(w[n]**2 + h[n]**2)
+#    # Need to implement lines 67 to 130, find area, length, centriod
+#    # of rectangles, plot on original graph
+#    
+#if(len(lengths[lengths>0])<6):
+#    mm= len(lengths[lengths>0])
+#else:
+#    mm = 6 # Not sure why this is the variable name, a lot of code
+#            # goes into determining some of the parameters in this section
+#
+#
+#x_length = np.zeros(mm)
+#x_area = np.zeros(mm)
+#y_area = np.zeros(mm)
+#
+#for n in range(mm):
+#    cen = [x[n],y[n]]  # Need actual centroid location
+#    bb = [x[n],y[n],x[n]+w[n],y[n]+h[n]] # Need actual bounding box
+#    x_area[n] = x[n]*w[n] #Incorrect, placeholder
+#    y_area[n] = y[n]*h[n] # Incorrect, placeholder
+#    
+#positions = np.zeros((3,mm))
+#positions[0,:] = np.arange(mm)
+#positions[1,:] = x_area[0:mm]
+#positions[2,:] = x_length[0:mm:]
+#
+#e=40 # Pixels, not sure what this does.
+#
+##Voting goes here, not sure how it works or why.
+#    
+#if plt_flag == 1: 
+#    plt.show()
+#if plt_flag == 2:
+#    cv2.waitKey(0)
 
