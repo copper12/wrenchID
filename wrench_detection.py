@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 from scipy.cluster import vq
 import scipy.stats
+import argparse
 
 from imadjust import imadjust
 from stretchlim import stretchlim, stretchlim2
@@ -26,18 +27,29 @@ from image_segmentation_length import image_segmentation_length
 ############################# User Inputs ##############################
 ########################################################################
 
-plt_flag = 1 # 0: Don't plot
-             # 1: Plot using plt
-             # 2: Plot using cv2.imshow
-plt_qty = 1  # 0: Only plot final product
-             # 1: Verbose plotting
-lim_type = 1 # 1: Same as Matlab (I think)
-             # 2: Same as Matlab on lower end, fixed upper limit to 255
-vot_type = 2 # 1: Tamer's voting algorithm (Not fully implemented)
-             # 2: Gaussian voting algorithm
+plt_flag = 1            # 0: Don't plot
+                        # 1: Plot using plt
+                        # 2: Plot using cv2.imshow
+plt_qty = 0             # 0: Only plot final product
+                        # 1: Verbose plotting
+lim_type = 1            # 1: Same as Matlab (I think)
+                        # 2: Same as Matlab on lower end, fixed upper limit to 255
+vot_type = 2            # 1: Tamer's voting algorithm (Not fully implemented)
+                        # 2: Gaussian voting algorithm
 
 n_wr = 6 # Number of wrenches
-im=cv2.imread('2.jpg',1); # Image to read
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-f","--filename", help="name of the image file to be processed",
+                    default='2.jpg')
+parser.add_argument("-v","--verbose", help="print images at each stage",
+                    action="count")
+args = parser.parse_args()
+
+if args.verbose > 0:
+    plt_qty = 1
+
+im=cv2.imread(args.filename,1); # Image to read
 
 # Tweaking parameters - Need to be adjusted if we are at different dist
 area_min_thresh = 3000 # Minimum contour area to be a wrench
@@ -47,7 +59,7 @@ p2crop = 2 # Portion of image to crop for circle detection
 
 d_mu = 21 # Diameter of correct wrench in pixels
 d_sig = d_mu*0.1 # Uncertainty in diameter
-l_mu = 375 # Length of correct wrench in pixels 
+l_mu = 375 # Length of correct wrench in pixels
 l_sig = l_mu*0.1 # Uncertainty in length
 a_mu = 11500 # Area of correct wrench in pixels
 a_sig = a_mu*0.1 # Uncertainty in area
@@ -212,14 +224,14 @@ if vot_type == 1:
         v_max = c_length2[i]+e
         if (votings[0,i] >= v_min and votings[0,i] <= v_max):
             votings[1,i] = votings[1,i] + 30
-    
-    if (votings[1,n_wr-2] >= votings[1,n_wr-1] or votings[1,n_wr-2] 
+
+    if (votings[1,n_wr-2] >= votings[1,n_wr-1] or votings[1,n_wr-2]
             >= votings[1,n_wr-3]):
         position = c_area2[n_wr-2]
-    if (votings[1,n_wr-1] >= votings[1,n_wr-2] or votings[1,n_wr-1] 
+    if (votings[1,n_wr-1] >= votings[1,n_wr-2] or votings[1,n_wr-1]
             >= votings[1,n_wr-3]):
         position = c_area2[n_wr-1]
-    if (votings[1,n_wr-3] >= votings[1,n_wr-2] or votings[1,n_wr-3] 
+    if (votings[1,n_wr-3] >= votings[1,n_wr-2] or votings[1,n_wr-3]
             >= votings[1,n_wr-1]):
         position = c_area2[n_wr-3]
 
@@ -253,14 +265,14 @@ if vot_type == 2:
     img_kmeans = im.copy()
     for n in range(n_wr):
         c = int(round(vote_result[n]*255))
-        cv2.circle(img_kmeans,(int(circs[n,0]),int(circs[n,1])), 
+        cv2.circle(img_kmeans,(int(circs[n,0]),int(circs[n,1])),
             int(circs[n,2]), (0,c,255-c), 2, cv2.CV_AA)
         cv2.drawContours(img_kmeans, cnt3[n], -1, (0,c,255-c), 3)
 
     # Visualize the best match
     img_id = im.copy()
     n = ind[n_wr-1]
-    cv2.circle(img_id,(int(circs[n,0]),int(circs[n,1])), 
+    cv2.circle(img_id,(int(circs[n,0]),int(circs[n,1])),
         int(circs[n,2]), (0,255,0), 2, cv2.CV_AA)
     cv2.drawContours(img_id, cnt3[n], -1, (0,255,0), 3)
 
@@ -289,7 +301,7 @@ if plt_qty == 1:
         cv2.imshow('Edge Detection',img_edge)
         cv2.imshow('All Circles',img_hou_all)
 if plt_qty >= 0:
-    if(plt_flag == 1):
+    if (plt_flag <= 1):
         fig7 = plt.figure();
         plt.title('Probability (Green good, Blue bad)');
         plt.imshow(img_kmeans)
@@ -300,4 +312,6 @@ if plt_qty >= 0:
         cv2.imshow('Probability (Green good, Red bad)',img_kmeans)
         cv2.imshow('Most Likely Candidate',img_id)
         cv2.waitKey(0)
+
+
 
