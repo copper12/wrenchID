@@ -25,9 +25,9 @@ def image_segmentation_length(img1):
             cv2.drawContours(mask,[c], -1, 0, -1)
     final2 = cv2.bitwise_and(final, final, mask=mask)
 
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(19,19))
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(16,16))
     remove = cv2.morphologyEx(final2, cv2.MORPH_OPEN, kernel)
     remove = (255-remove)
     #remove = cv2.morphologyEx(remove, cv2.MORPH_OPEN, kernel)
-    return remove
+    return remove, img2
     
