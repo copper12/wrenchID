@@ -17,7 +17,7 @@ from stretchlim import stretchlim, stretchlim2
 from back_ground_remove import back_ground_remove
 from image_segmentation import image_segmentation
 from image_segmentation_length import image_segmentation_length
-from kmeans import cluster_points, reevaluate_centers, find_centers
+#from kmeans import cluster_points, reevaluate_centers, find_centers
 
 plt_flag = 1 # 0: Don't plot
              # 1: Plot using plt
