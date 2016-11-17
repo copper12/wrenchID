@@ -53,3 +53,5 @@ for n in range(n_wr):
                          1, color=color1[2])
     plt.gca().add_patch(circ_plt)
     plt.gca().add_patch(cntr_plt)
+
+plt.show()
